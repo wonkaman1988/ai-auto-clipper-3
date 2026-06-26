@@ -1,0 +1,56 @@
+{
+  "name": "AI Auto-Clipper",
+  "description": "AI-powered viral video clipping SaaS",
+  "repository": "https://github.com/your-username/ai-auto-clipper-2",
+  "keywords": ["node", "express", "stripe", "mongodb"],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "env": {
+    "MONGODB_URI": {
+      "description": "MongoDB connection string",
+      "required": true
+    },
+    "JWT_SECRET": {
+      "description": "Secret key for JWT tokens",
+      "required": true,
+      "value": "your-jwt-secret-key"
+    },
+    "STRIPE_PUBLIC_KEY": {
+      "description": "Stripe Public Key (starts with pk_test_)",
+      "required": true
+    },
+    "STRIPE_SECRET_KEY": {
+      "description": "Stripe Secret Key (starts with sk_test_)",
+      "required": true
+    },
+    "STRIPE_WEBHOOK_SECRET": {
+      "description": "Stripe Webhook Secret (starts with whsec_)",
+      "required": false
+    },
+    "EMAIL_USER": {
+      "description": "Gmail email address",
+      "required": true
+    },
+    "EMAIL_PASSWORD": {
+      "description": "Gmail app password",
+      "required": true
+    },
+    "FRONTEND_URL": {
+      "description": "Frontend URL",
+      "required": true,
+      "value": "https://your-app-name.railway.app"
+    },
+    "PORT": {
+      "description": "Port",
+      "value": "3000"
+    }
+  },
+  "addons": [
+    {
+      "plan": "heroku-postgresql"
+    }
+  ]
+}
