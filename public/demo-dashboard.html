@@ -1,0 +1,30 @@
+<!-- Upgrade / Checkout -->
+<div style="margin-top:20px">
+  <button id="checkoutBtn" style="padding:10px 14px;border-radius:8px;background:#2563eb;color:white;border:none;cursor:pointer">
+    Upgrade to Pro
+  </button>
+</div>
+
+<script>
+  document.getElementById('checkoutBtn')?.addEventListener('click', async () => {
+    // Replace with your Stripe Price ID (price_...)
+    const priceId = 'price_REPLACE_ME';
+    try {
+      const res = await fetch('/api/payments/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceId, mode: 'subscription' })
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert('Failed to create checkout session. Check console.');
+        console.error(data);
+      }
+    } catch (err) {
+      alert('Error creating checkout session. Check console.');
+      console.error(err);
+    }
+  });
+</script>
