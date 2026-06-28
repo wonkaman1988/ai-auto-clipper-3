@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Auto-Clipper — Demo Dashboard</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background:#f3f4f6; color:#111; margin:0; padding:20px }
+    .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px }
+    .clips { display:grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap:16px }
+    .clip { background:white; padding:12px; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.08) }
+    .clip h4 { margin:8px 0 }
+    .badge { display:inline-block; padding:4px 8px; border-radius:999px; color:white; font-weight:700; font-size:12px }
+    .badge.ready { background:#10b981 }
+    .badge.processing { background:#f59e0b }
+    .actions { margin-top:8px; display:flex; gap:8px }
+    button { padding:8px 10px; border-radius:8px; border:none; cursor:pointer }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Demo Dashboard</h1>
+    <div>
+      <button id="setDemo">Set Demo User</button>
+      <button id="refresh">Refresh</button>
+    </div>
+  </div>
+
+  <div id="stats" style="margin-bottom:16px"></div>
+  <div id="clips" class="clips"></div>
+
+  <script>
+    async function fetchClips() {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user.id || 'demo-user';
+      const res = await fetch(`/api/clips/${encodeURIComponent(userId)}`);
+      if (!res.ok) {
+        document.getElementById('clips').innerText = 'Failed to fetch clips';
+        return;
+      }
+      const clips = await res.json();
+      renderClips(clips);
+    }
+
+    function renderClips(clips) {
+      const container = document.getElementById('clips');
+      container.innerHTML = '';
+      let ready = 0, processing = 0;
+      clips.forEach(c => {
+        if (c.status === 'ready') ready++; else processing++;
+        const el = document.createElement('div');
+        el.className = 'clip';
+        el.innerHTML = `
+          <div style="height:120px;background:#6b7280;border-radius:8px;display:flex;align-items:center;justify-content:center;color:white">📹 ${c.duration}s</div>
+          <h4>${escapeHtml(c.title || '')}</h4>
+          <p>${escapeHtml(c.description || '')}</p>
+          <div style="margin-top:8px"><span class="badge ${c.status}">${c.status.toUpperCase()}</span></div>
+          <div class="actions">
+            <button onclick="window.open('${c.videoUrl}','_blank')">⬇️ Download</button>
+            <button onclick="navigator.share?.({title: '${escapeHtml(c.title || '')}', url: '${c.videoUrl}'})">📤 Share</button>
+          </div>
+        `;
+        container.appendChild(el);
+      });
+      document.getElementById('stats').innerText = `Total: ${clips.length} | Ready: ${ready} | Processing: ${processing}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    document.getElementById('setDemo').addEventListener('click', () => {
+      localStorage.setItem('user', JSON.stringify({ id: 'demo-user', name: 'Demo User', plan: 'pro' }));
+      alert('Demo user set');
+    });
+    document.getElementById('refresh').addEventListener('click', fetchClips);
+
+    // Auto-fetch on load
+    fetchClips();
+  </script>
+</body>
+</html>
