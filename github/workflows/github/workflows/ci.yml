@@ -1,0 +1,35 @@
+steps:
+  - name: Checkout
+    uses: actions/checkout@v4
+
+  - name: Setup Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: '18'
+      cache: 'npm'
+
+  - name: Install dependencies
+    run: npm ci
+
+  - name: Build client
+    run: npm run build
+
+  - name: Start server (background)
+    run: |
+      nohup npm start &
+      # Wait for server to be up (max 30s)
+      for i in {1..30}; do
+        if curl -sSf http://localhost:3000/health >/dev/null; then
+          echo "Server is up"
+          break
+        fi
+        sleep 1
+      done
+
+  - name: Smoke test - /health
+    run: |
+      curl -sSf http://localhost:3000/health | jq .
+
+  - name: Smoke test - /api/clips/demo-user
+    run: |
+      curl -sSf http://localhost:3000/api/clips/demo-user | jq '.[0]'
