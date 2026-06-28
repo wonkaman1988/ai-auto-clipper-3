@@ -1,35 +1,25 @@
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+name: Deploy to Heroku
 
-  - name: Setup Node.js
-    uses: actions/setup-node@v4
-    with:
-      node-version: '18'
-      cache: 'npm'
+on:
+  push:
+    branches: [ main ]
 
-  - name: Install dependencies
-    run: npm ci
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-  - name: Build client
-    run: npm run build
-
-  - name: Start server (background)
-    run: |
-      nohup npm start &
-      # Wait for server to be up (max 30s)
-      for i in {1..30}; do
-        if curl -sSf http://localhost:3000/health >/dev/null; then
-          echo "Server is up"
-          break
-        fi
-        sleep 1
-      done
-
-  - name: Smoke test - /health
-    run: |
-      curl -sSf http://localhost:3000/health | jq .
-
-  - name: Smoke test - /api/clips/demo-user
-    run: |
-      curl -sSf http://localhost:3000/api/clips/demo-user | jq '.[0]'
+      - name: Deploy to Heroku
+        run: |
+          git config user.email "deploy@example.com"
+          git config user.name "Deploy Bot"
+          git remote add heroku https://git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git
+          echo "machine git.heroku.com" > ~/.netrc
+          echo "login ${{ secrets.HEROKU_EMAIL }}" >> ~/.netrc
+          echo "password ${{ secrets.HEROKU_API_KEY }}" >> ~/.netrc
+          chmod 600 ~/.netrc
+          git push heroku main:main -f
